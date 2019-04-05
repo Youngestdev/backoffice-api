@@ -70,18 +70,31 @@ describe('Products', () => {
 
   describe('/PUT product', () => {
     it('it should update a product', async () => {
+      // insert a product on the DB
       const product = new Product({
         title: 'Wrong product.'
       });
       await product.save();
+
+      // define what will change
+      const newTitle = 'Updated product';
+
+      // issue the request
       chai
         .request(server)
         .put('/' + product._id)
-        .send({ title: 'Updated product' })
+        .send({ title: newTitle })
         .end((err, res) => {
+          // check the status of the request
           res.should.have.status(200);
           res.body.should.be.a('object');
           res.body.should.have.property('message').eql('Product updated.');
+
+          // get the updated version of the product
+          Product.findOne({ _id: product._id }).exec((err, dbProduct) => {
+            // check if the updated version got the new title
+            chai.expect(dbProduct.title).to.equal(newTitle);
+          });
         });
     });
   });
